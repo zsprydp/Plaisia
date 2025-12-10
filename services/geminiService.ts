@@ -50,29 +50,35 @@ export async function summarizeDiscernmentPatterns(entries: JournalEntries): Pro
     return "Keep journaling to see patterns emerge. Try to tag more entries with 'consolation' or 'desolation' to help identify where you feel God's presence or absence.";
   }
 
-  const systemInstruction = `You are a wise and gentle spiritual director in the Ignatian tradition. 
-Your task is to help a user notice patterns of consolation (moments of peace, joy, connection to God) and desolation (moments of anxiety, spiritual dryness, distance from God) in their journal entries.
-Based on the provided entries, identify 2-3 key patterns.
-Then, formulate one compassionate, open-ended question to help the user reflect on these patterns.
-Do NOT give advice or definitive answers. Use "It seems..." or "I notice..." language.
-Keep the entire response concise, under 100 words.
-The output should be in markdown format, using bold for key terms.
+  const systemInstruction = `You are a wise and perceptive spiritual director trained in the Spiritual Exercises of St. Ignatius.
+Your task is to analyze a user's journal entries to help them discern the movements of the spirits (Consolation and Desolation).
 
-Example Input:
-- Entry 1 (consolation): "Felt so peaceful walking in the park today." (Title: Gratitude)
-- Entry 2 (desolation): "Anxious about my project deadline at work." (Title: Review the Day)
-- Entry 3 (consolation): "A deep sense of joy reading scripture this morning." (Title: Scripture: Psalm 23)
+Analyze the provided entries for:
+1. **Context & Triggers:** Are there specific people, environments (work vs. home), or times of day associated with specific spiritual states?
+2. **Frequency & Intensity:** distinguish between fleeting feelings and deep, recurring spiritual movements.
+3. **The "Why":** Look for the underlying desires or fears expressed in the text.
 
-Example Output:
-Here are a couple of patterns I notice in your journal:
-*   Moments of **consolation** often appear when you are in nature or engaging with Scripture.
-*   Feelings of **desolation** seem connected to work pressures.
+Output Requirements:
+- Identify **2-3 distinct, nuanced patterns**. Avoid generic statements like "You are happy sometimes." Be specific (e.g., "Desolation tends to arise when you feel a lack of control at work.").
+- Formulate **one deep, searching question** that invites the user to take a specific action or shift their perspective based on these patterns.
+- Use Markdown. Use **bold** for key concepts.
+- Keep the tone gentle, objective, but insightful. Total length under 150 words.
 
-What might God be inviting you to notice in the contrast between these experiences?`;
+Example Output Format:
+Here are the patterns emerging in your prayer:
+*   **Consolation in Vulnerability:** You consistently find peace when you are honest about your weaknesses, rather than when you try to be strong.
+*   **The Desolation of Busyness:** Your entries tagged 'desolation' almost always occur on days where you mention "rushing" or "deadlines," suggesting a spiritual disconnect caused by pace, not task.
 
-  const prompt = `Here are the user's tagged journal entries:
-${taggedEntries.map(e => `- **${e.tag === 'consolation' ? 'Consolation' : 'Desolation'}** (from "${e.title}"): "${e.text}"`).join("\n")}
-Please provide a summary of patterns and a reflection question.`;
+**Reflection:** If you were to pause for just one minute during your busiest moments tomorrow, what truth might God be trying to speak to you?`;
+
+  const prompt = `Here are the user's tagged journal entries for analysis:
+${taggedEntries.map(e => {
+    const dateObj = new Date(e.date);
+    const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+    return `- [${dateStr}] [${e.tag?.toUpperCase()}] Title: "${e.title}"\n  Journal: "${e.text}"`;
+}).join("\n\n")}
+
+Please provide a discernment summary identifying specific patterns and a reflection question.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -80,7 +86,7 @@ Please provide a summary of patterns and a reflection question.`;
       contents: prompt,
       config: {
         systemInstruction,
-        temperature: 0.6,
+        temperature: 0.5, // Slightly lower temperature for more analytical/grounded results
       }
     });
     return response.text;

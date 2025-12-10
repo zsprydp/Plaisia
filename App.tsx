@@ -347,6 +347,31 @@ const App: React.FC = () => {
       }
   };
 
+  // Share Logic
+  const handleShareEntry = async (entry: JournalEntry) => {
+      const textToShare = `${entry.title}\n${new Date(entry.date).toLocaleDateString()}\n\n${entry.text}`;
+      
+      if (navigator.share) {
+          try {
+              await navigator.share({
+                  title: 'Plaísia Journal Entry',
+                  text: textToShare,
+              });
+          } catch (err) {
+              if ((err as Error).name !== 'AbortError') {
+                console.error('Error sharing:', err);
+              }
+          }
+      } else {
+          try {
+              await navigator.clipboard.writeText(textToShare);
+              alert('Entry copied to clipboard.');
+          } catch (err) {
+              console.error('Failed to copy:', err);
+          }
+      }
+  };
+
   const renderSettingsModal = () => {
       if (!showSettings) return null;
 
@@ -556,8 +581,13 @@ const App: React.FC = () => {
                       {historyEntries.map(([key, entry]) => (
                           <div key={key} className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border-l-4 border-sky-200">
                               <div className="flex justify-between items-start mb-2">
-                                  <h3 className="font-bold text-slate-700">{entry.title}</h3>
-                                  <span className="text-xs text-slate-400">{new Date(entry.date).toLocaleDateString()}</span>
+                                  <div>
+                                      <h3 className="font-bold text-slate-700">{entry.title}</h3>
+                                      <span className="text-xs text-slate-400">{new Date(entry.date).toLocaleDateString()}</span>
+                                  </div>
+                                  <button onClick={() => handleShareEntry(entry)} className="text-slate-400 hover:text-sky-600 transition-colors p-2 rounded-full hover:bg-slate-50" title="Share Entry">
+                                      <Icon name="Share" className="w-5 h-5" />
+                                  </button>
                               </div>
                               <p className="text-slate-600 whitespace-pre-wrap">{entry.text}</p>
                               {entry.tag && (
