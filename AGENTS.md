@@ -4,15 +4,27 @@
 
 ### Project overview
 
-Plaisia is a client-side React SPA (no backend) for AI-assisted daily prayer/reflection using Ignatian spirituality. Built with React 18, TypeScript, Vite, and Tailwind CSS (loaded via CDN).
+Plaisia is an AI-assisted daily prayer/reflection app using Ignatian spirituality. Built with React 18, TypeScript, Vite (client) and Express (API proxy server).
 
-### Running the dev server
+### Architecture
+
+- **Client**: React SPA built with Vite, Tailwind CSS (local, not CDN), served on port 5173 in dev
+- **Server**: Express API proxy (`server/`) on port 3001, holds the Gemini API key server-side
+- Vite proxies `/api/*` to the Express server in development
+- In production, Express serves static files from `dist/` + handles API routes
+
+### Running the dev environment
 
 ```
 npm run dev
 ```
 
-Starts Vite on port 5173. Use `--host 0.0.0.0` to expose to network.
+This uses `concurrently` to start both the Express server (port 3001) and Vite dev server (port 5173). You can also run them separately:
+
+```
+npm run dev:server   # Express only
+npm run dev:client   # Vite only
+```
 
 ### Lint / Type-check
 
@@ -22,12 +34,17 @@ No ESLint is configured. Use TypeScript for type-checking:
 npx tsc --noEmit
 ```
 
-Note: The codebase has pre-existing TS errors (unused imports, a relative path issue in `services/geminiService.ts`). These do not block the Vite build.
-
 ### Build
 
 ```
 npm run build
+```
+
+### Production
+
+```
+npm run build
+npm start
 ```
 
 ### Testing
@@ -36,7 +53,7 @@ No automated test framework is configured. Manual browser testing is the primary
 
 ### Important caveats
 
-- **API Key required**: The app needs `API_KEY` set in `.env.local` for the Google Gemini API. Without it, the app crashes on load because `services/geminiService.ts` throws at module-import time. A placeholder value allows the UI to render, but AI features (reflection prompts, discernment analysis, TTS) will fail at call time.
-- **No lock file**: There is no `package-lock.json` in the repo, so `npm install` resolves versions fresh each time.
-- **CDN dependencies**: Tailwind CSS and Google Fonts load from CDNs at runtime. Network access to `cdn.tailwindcss.com` and `fonts.googleapis.com` is required for proper styling.
-- **All state is in localStorage**: No database or backend; journal entries persist in the browser's localStorage only.
+- **API Key**: Set `API_KEY` in `.env.local`. The key is only read server-side by `server/index.js` — it is never sent to the client bundle. Without a valid key, the server returns 500 errors for AI features but the UI still renders.
+- **Dev-only UI**: The "(Dev: Advance to Week)" button on the dashboard only appears when `import.meta.env.DEV` is true. It is excluded from production builds.
+- **CDN dependencies**: Google Fonts (Merriweather, Source Sans 3) load from `fonts.googleapis.com` at runtime. Tailwind CSS is bundled locally.
+- **All user state is in localStorage**: No database or backend persistence; journal entries persist in the browser only.
