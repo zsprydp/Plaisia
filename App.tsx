@@ -9,6 +9,7 @@ import { trackEvent } from './services/analytics';
 import { getSession, onAuthStateChange, isSupabaseConfigured } from './services/auth';
 import type { User } from './services/auth';
 import { loadJournalEntries, saveJournalEntry } from './services/storage';
+import { requestNotificationPermission, startReminderCheck } from './services/notifications';
 import LoadingSpinner from './components/LoadingSpinner';
 import Icon from './components/Icon';
 import MoodTracker from './components/MoodTracker';
@@ -106,38 +107,11 @@ const App: React.FC = () => {
       }
   }, [journalEntries]);
 
-  // Check for reminders every minute
+  // Check for reminders every minute (via service worker when available)
   useEffect(() => {
     if (!reminderTime) return;
-
-    const checkInterval = setInterval(() => {
-      const now = new Date();
-      // Format current time as HH:mm to match input type="time"
-      const currentHours = String(now.getHours()).padStart(2, '0');
-      const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-      const currentTimeString = `${currentHours}:${currentMinutes}`;
-      
-      if (currentTimeString === reminderTime) {
-         const lastNotified = localStorage.getItem('plaisia_last_notified');
-         const today = new Date().toDateString();
-         
-         if (lastNotified !== today) {
-             if (Notification.permission === 'granted') {
-                 try {
-                     new Notification("Plaísia", {
-                         body: "It's time for your daily prayer and reflection.",
-                         icon: "/vite.svg"
-                     });
-                     localStorage.setItem('plaisia_last_notified', today);
-                 } catch (e) {
-                     console.error("Notification failed", e);
-                 }
-             }
-         }
-      }
-    }, 60000); // Check every minute
-
-    return () => clearInterval(checkInterval);
+    const cleanup = startReminderCheck(reminderTime);
+    return cleanup;
   }, [reminderTime]);
 
   // Stop speech when component unmounts or mode changes
@@ -345,7 +319,6 @@ const App: React.FC = () => {
       }
   }
 
-  // Reminder Logic
   const handleReminderChange = async (time: string) => {
       if (!time) {
           setReminderTime('');
@@ -353,19 +326,14 @@ const App: React.FC = () => {
           return;
       }
 
-      if ('Notification' in window) {
-          if (Notification.permission !== 'granted') {
-              const permission = await Notification.requestPermission();
-              if (permission !== 'granted') {
-                  alert('We need notification permissions to send you daily reminders.');
-                  return;
-              }
-          }
-          setReminderTime(time);
-          localStorage.setItem('plaisia_reminder_time', time);
-      } else {
-          alert('This browser does not support desktop notifications.');
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+          alert('We need notification permissions to send you daily reminders.');
+          return;
       }
+
+      setReminderTime(time);
+      localStorage.setItem('plaisia_reminder_time', time);
   };
 
   // Share Logic
