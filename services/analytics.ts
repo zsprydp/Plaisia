@@ -21,7 +21,7 @@ const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
 export function trackEvent(name: EventName, props?: AnalyticsEvent['props']) {
   if (isDoNotTrack || !endpoint) {
     if (import.meta.env.DEV) {
-      console.debug('[analytics]', name, props ?? '');
+      console.log('[analytics]', name, props ?? '');
     }
     return;
   }
