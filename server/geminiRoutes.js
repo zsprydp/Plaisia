@@ -36,7 +36,7 @@ Example: If user writes "My boss was so unfair today", a good question is "Where
         config: {
           systemInstruction,
           temperature: 0.7,
-          maxOutputTokens: 50,
+          maxOutputTokens: 1024,
         },
       });
 
