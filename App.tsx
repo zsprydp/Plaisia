@@ -6,9 +6,13 @@ import StepCard from './components/StepCard';
 import NavigationButtons from './components/NavigationButtons';
 import { generateReflectionPrompt, summarizeDiscernmentPatterns, generateScriptureSpeech } from './services/geminiService';
 import { trackEvent } from './services/analytics';
+import { getSession, onAuthStateChange, isSupabaseConfigured } from './services/auth';
+import type { User } from './services/auth';
+import { loadJournalEntries, saveJournalEntry } from './services/storage';
 import LoadingSpinner from './components/LoadingSpinner';
 import Icon from './components/Icon';
 import MoodTracker from './components/MoodTracker';
+import AuthModal from './components/AuthModal';
 
 type UIMode = 'landing' | 'dashboard' | 'mood_check_in' | 'daily_practice' | 'discernment' | 'history';
 
@@ -18,6 +22,10 @@ const App: React.FC = () => {
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [aiPrompt, setAiPrompt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Auth state
+  const [user, setUser] = useState<User | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
 
   // Journey state
   const [currentJourneyWeekIndex, setCurrentJourneyWeekIndex] = useState(0);
@@ -43,10 +51,24 @@ const App: React.FC = () => {
   
   const taggedEntries = useMemo(() => (Object.values(journalEntries) as JournalEntry[]).filter(j => j && j.tag), [journalEntries]);
 
-  // Load data from local storage on mount
+  // Auth initialization
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+
+    getSession().then((session) => {
+      setUser(session?.user ?? null);
+    });
+
+    const subscription = onAuthStateChange((session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => { subscription.unsubscribe(); };
+  }, []);
+
+  // Load data on mount (and when user changes)
   useEffect(() => {
     const savedMoodData = localStorage.getItem('plaisia_daily_mood');
-    const savedJournalData = localStorage.getItem('plaisia_journal_entries');
     const hasOnboarded = localStorage.getItem('plaisia_onboarded');
     const savedReminderTime = localStorage.getItem('plaisia_reminder_time');
 
@@ -72,14 +94,10 @@ const App: React.FC = () => {
       }
     }
 
-    if (savedJournalData) {
-        try {
-            setJournalEntries(JSON.parse(savedJournalData));
-        } catch (e) {
-            console.error("Failed to parse journal entries", e);
-        }
-    }
-  }, []);
+    loadJournalEntries(user?.id).then((entries) => {
+      setJournalEntries(entries);
+    });
+  }, [user?.id]);
 
   // Save journal entries whenever they change
   useEffect(() => {
@@ -292,24 +310,22 @@ const App: React.FC = () => {
   };
   
   const handleJournalChange = (key: string, text: string, title: string) => {
-    setJournalEntries(prev => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        text,
-        title,
-        date: new Date().toISOString(),
-      }
-    }));
+    const entry = {
+      ...journalEntries[key],
+      text,
+      title,
+      date: new Date().toISOString(),
+    };
+    setJournalEntries(prev => ({ ...prev, [key]: entry }));
+    saveJournalEntry(key, entry, user?.id);
   };
 
   const handleTagChange = (key: string, tag: JournalTag | null) => {
       setJournalEntries(prev => {
           const currentEntry = prev[key] || { text: '', title: '', date: new Date().toISOString(), tag: null };
-          return {
-              ...prev,
-              [key]: { ...currentEntry, tag: currentEntry.tag === tag ? null : tag } 
-          }
+          const updated = { ...currentEntry, tag: currentEntry.tag === tag ? null : tag };
+          saveJournalEntry(key, updated, user?.id);
+          return { ...prev, [key]: updated };
       });
   };
 
@@ -487,6 +503,15 @@ const App: React.FC = () => {
         <div className="flex justify-between items-center mb-6">
             <h1 className="text-4xl font-bold text-slate-700">Plaísia</h1>
             <div className="flex items-center space-x-4">
+                 <button onClick={() => setShowAuth(true)} className="text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center p-2 rounded-full hover:bg-slate-100" title={user ? 'Account' : 'Sign In'}>
+                     {user ? (
+                       <span className="w-5 h-5 bg-sky-600 text-white rounded-full text-xs flex items-center justify-center font-bold">{user.email?.[0]?.toUpperCase()}</span>
+                     ) : (
+                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                       </svg>
+                     )}
+                 </button>
                  <button onClick={() => setShowSettings(true)} className="text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center p-2 rounded-full hover:bg-slate-100" title="Settings">
                      <Icon name="Settings" className="w-5 h-5" />
                  </button>
@@ -831,6 +856,12 @@ const App: React.FC = () => {
     <div className={`min-h-screen flex flex-col items-center justify-center transition-all duration-500 ${uiMode === 'mood_check_in' || uiMode === 'landing' ? 'bg-slate-900' : 'bg-slate-50 text-slate-800'}`}>
       {renderContent()}
       {renderSettingsModal()}
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        user={user}
+        onAuthChange={() => loadJournalEntries(user?.id).then(setJournalEntries)}
+      />
     </div>
   );
 };
