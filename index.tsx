@@ -2,7 +2,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles/index.css';
+import { initSentry } from './services/sentry';
+import { AppErrorBoundary } from './components/ErrorBoundary';
 import App from './App';
+
+initSentry();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -12,6 +16,8 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
   </React.StrictMode>
 );
