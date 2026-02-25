@@ -14,7 +14,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   onNext,
   onHome,
   isFirstStep,
-  isLastStep,
+  isLastStep: _isLastStep,
   nextButtonText = 'Next'
 }) => {
   return (

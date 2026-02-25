@@ -1,5 +1,5 @@
 import { GoogleGenAI, Modality } from "@google/genai";
-import type { JournalEntries, JournalEntry } from './types';
+import type { JournalEntries, JournalEntry } from '../types';
 
 // Ensure the API key is available in the environment variables
 const apiKey = process.env.API_KEY;
@@ -34,7 +34,7 @@ Example: If user writes "My boss was so unfair today", a good question is "Where
       }
     });
 
-    const text = response.text.trim().replace(/"/g, ''); // Clean up response
+    const text = (response.text ?? '').trim().replace(/"/g, '');
     return text;
   } catch (error) {
     console.error("Error generating reflection prompt:", error);
@@ -89,7 +89,7 @@ Please provide a discernment summary identifying specific patterns and a reflect
         temperature: 0.5, // Slightly lower temperature for more analytical/grounded results
       }
     });
-    return response.text;
+    return response.text ?? '';
   } catch (error) {
     console.error("Error summarizing patterns:", error);
     throw new Error("Failed to communicate with the AI model for discernment.");

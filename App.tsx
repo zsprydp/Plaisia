@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { EXAMEN_STEPS, IGNATIAN_JOURNEY, MOODS } from './constants';
-import type { ExamenStep, JournalEntries, JournalTag, JournalEntry, IgnatianWeek } from './types';
+import type { ExamenStep, JournalEntries, JournalTag, JournalEntry } from './types';
 import StepCard from './components/StepCard';
 import NavigationButtons from './components/NavigationButtons';
 import { generateReflectionPrompt, summarizeDiscernmentPatterns, generateScriptureSpeech } from './services/geminiService';
