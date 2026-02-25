@@ -5,6 +5,7 @@ import type { ExamenStep, JournalEntries, JournalTag, JournalEntry } from './typ
 import StepCard from './components/StepCard';
 import NavigationButtons from './components/NavigationButtons';
 import { generateReflectionPrompt, summarizeDiscernmentPatterns, generateScriptureSpeech } from './services/geminiService';
+import { trackEvent } from './services/analytics';
 import LoadingSpinner from './components/LoadingSpinner';
 import Icon from './components/Icon';
 import MoodTracker from './components/MoodTracker';
@@ -151,6 +152,7 @@ const App: React.FC = () => {
 
   const handleGetStarted = () => {
       localStorage.setItem('plaisia_onboarded', 'true');
+      trackEvent('journey_started');
       handleSetMode('dashboard');
   }
 
@@ -165,6 +167,7 @@ const App: React.FC = () => {
         mood,
         date: new Date().toDateString()
     }));
+    trackEvent('mood_selected', { mood });
     startDailyPractice();
   }
 
@@ -231,6 +234,7 @@ const App: React.FC = () => {
       const nextStepIndex = currentDailyStepIndex + 1;
       
       if (nextStepIndex >= totalDailySteps) {
+          trackEvent('prayer_completed', { week: currentWeekData.week });
           handleSetMode('dashboard');
           return;
       }
@@ -310,6 +314,7 @@ const App: React.FC = () => {
   };
 
   const handleGetDiscernmentSummary = async () => {
+      trackEvent('discernment_viewed');
       setIsLoadingAI(true);
       setError(null);
       setDiscernmentSummary('');
