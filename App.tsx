@@ -546,6 +546,7 @@ const App: React.FC = () => {
                 Discernment Patterns
             </button>
         </div>
+        {import.meta.env.DEV && (
         <div className="mt-8 border-t border-slate-200 pt-4">
             <button 
                 onClick={() => setCurrentJourneyWeekIndex(prev => (prev + 1) % IGNATIAN_JOURNEY.length)}
@@ -554,6 +555,7 @@ const App: React.FC = () => {
                 (Dev: Advance to Week {(currentJourneyWeekIndex + 1) % IGNATIAN_JOURNEY.length + 1})
             </button>
         </div>
+        )}
     </div>
   )};
 
