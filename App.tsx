@@ -14,8 +14,9 @@ import LoadingSpinner from './components/LoadingSpinner';
 import Icon from './components/Icon';
 import MoodTracker from './components/MoodTracker';
 import AuthModal from './components/AuthModal';
+import Onboarding from './components/Onboarding';
 
-type UIMode = 'landing' | 'dashboard' | 'mood_check_in' | 'daily_practice' | 'discernment' | 'history';
+type UIMode = 'landing' | 'onboarding' | 'dashboard' | 'mood_check_in' | 'daily_practice' | 'discernment' | 'history';
 
 const App: React.FC = () => {
   const [uiMode, setUiMode] = useState<UIMode>('landing');
@@ -143,8 +144,12 @@ const App: React.FC = () => {
   }
 
   const handleGetStarted = () => {
-      localStorage.setItem('plaisia_onboarded', 'true');
       trackEvent('journey_started');
+      handleSetMode('onboarding');
+  }
+
+  const handleOnboardingComplete = () => {
+      localStorage.setItem('plaisia_onboarded', 'true');
       handleSetMode('dashboard');
   }
 
@@ -810,6 +815,12 @@ const App: React.FC = () => {
   const renderContent = () => {
       switch (uiMode) {
           case 'landing': return renderLanding();
+          case 'onboarding': return (
+            <Onboarding
+              onComplete={handleOnboardingComplete}
+              onOpenAuth={() => setShowAuth(true)}
+            />
+          );
           case 'mood_check_in': return renderMoodCheckIn();
           case 'daily_practice': return renderDailyPractice();
           case 'discernment': return renderDiscernmentTool();
@@ -821,7 +832,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center transition-all duration-500 ${uiMode === 'mood_check_in' || uiMode === 'landing' ? 'bg-slate-900' : 'bg-slate-50 text-slate-800'}`}>
+    <div className={`min-h-screen flex flex-col items-center justify-center transition-all duration-500 ${uiMode === 'mood_check_in' || uiMode === 'landing' || uiMode === 'onboarding' ? 'bg-slate-900' : 'bg-slate-50 text-slate-800'}`}>
       {renderContent()}
       {renderSettingsModal()}
       <AuthModal
