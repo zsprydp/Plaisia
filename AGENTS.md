@@ -36,8 +36,20 @@ No ESLint configured.
 
 ```
 npm run build    # Vite build + PWA service worker generation
-npm start        # Express serves static files + API (production mode)
+npm start        # Express serves static files + API (self-hosted production)
 ```
+
+### Deploying to Vercel
+
+The app is configured for Vercel out of the box:
+
+1. Push the repo to GitHub
+2. Import the project in [vercel.com](https://vercel.com)
+3. Set the `API_KEY` environment variable (your Gemini API key) in the Vercel dashboard under Settings → Environment Variables
+4. Optionally set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_SENTRY_DSN`
+5. Deploy
+
+Vercel uses the `api/` directory for serverless functions and `dist/` for the static Vite build. The `server/` directory is only used for local development (Express + Vite proxy).
 
 ### Testing
 
