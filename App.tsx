@@ -1,5 +1,6 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { EXAMEN_STEPS, IGNATIAN_JOURNEY, MOODS } from './constants';
 import type { ExamenStep, JournalEntries, JournalTag, JournalEntry } from './types';
 import StepCard from './components/StepCard';
@@ -798,7 +799,7 @@ const App: React.FC = () => {
 
                   {discernmentSummary && !isLoadingAI && (
                        <div className="my-4 p-4 bg-indigo-50 border-l-4 border-indigo-400 text-indigo-900 rounded-r-lg animate-fade-in prose prose-slate">
-                           <div dangerouslySetInnerHTML={{ __html: discernmentSummary.replace(/\n/g, '<br />') }} />
+                           <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(discernmentSummary.replace(/\n/g, '<br />')) }} />
                            <p className="text-xs text-right mt-2 opacity-70">- AI Assisted Reflection</p>
                        </div>
                   )}
