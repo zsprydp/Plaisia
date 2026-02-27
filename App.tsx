@@ -460,8 +460,37 @@ const App: React.FC = () => {
               >
                   Begin Your Journey
               </button>
-              
-              <p className="text-xs text-slate-500 mt-8">Your journal data is stored locally on your device for privacy.</p>
+
+              {/* How it works */}
+              <div className="mt-16 pt-12 border-t border-white/10 max-w-2xl mx-auto">
+                  <h2 className="text-xl font-semibold text-slate-400 uppercase tracking-widest mb-8">How it works</h2>
+                  <div className="space-y-6 text-left">
+                      {[
+                        { num: '1', text: 'Check in with how you\'re feeling today' },
+                        { num: '2', text: 'Breathe, center yourself, and read Scripture' },
+                        { num: '3', text: 'Journal your reflections with AI-guided prompts' },
+                        { num: '4', text: 'Notice patterns of God\'s presence over time' },
+                      ].map(({ num, text }) => (
+                        <div key={num} className="flex items-center space-x-4">
+                          <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold text-sky-300 shrink-0">{num}</span>
+                          <p className="text-slate-300">{text}</p>
+                        </div>
+                      ))}
+                  </div>
+              </div>
+
+              {/* Testimonial */}
+              <div className="mt-12 max-w-lg mx-auto">
+                  <blockquote className="text-slate-400 italic text-lg leading-relaxed">
+                      "The Examen is the most important prayer of your day."
+                  </blockquote>
+                  <p className="text-slate-500 text-sm mt-2">— St. Ignatius of Loyola</p>
+              </div>
+
+              <div className="mt-8 flex flex-col items-center space-y-2">
+                  <p className="text-xs text-slate-500">Your journal data is stored locally on your device for privacy.</p>
+                  <p className="text-xs text-slate-600">Works offline · No account required · Free</p>
+              </div>
           </div>
       </div>
   );
