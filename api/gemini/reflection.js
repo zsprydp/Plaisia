@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { checkRateLimit } from '../_rateLimit.js';
 import { validateText, sanitizeText } from '../_validate.js';
+import { wrapUserInput, INJECTION_GUARD } from '../_prompt.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -31,12 +32,13 @@ Your role is to help a user reflect more deeply on their day.
 Based on the user's journal entry about a specific moment, ask one short, compassionate, and open-ended question to guide their conversation with Jesus.
 Do NOT give advice, answers, or theological statements. Do NOT use "I" or "we". 
 Do NOT claim to speak for God. The question should be prayerful and reflective.
-Keep the question under 20 words.`;
+Keep the question under 20 words.
+${INJECTION_GUARD}`;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `Here is the user's journal entry: "${cleanEntry}". Please generate one reflection question.`,
+      contents: `Here is the user's journal entry for reflection:\n${wrapUserInput(cleanEntry)}\n\nPlease generate one reflection question.`,
       config: {
         systemInstruction,
         temperature: 0.7,
