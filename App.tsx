@@ -698,7 +698,7 @@ const App: React.FC = () => {
                         </div>
                         <div className="flex-1">
                            <h2 className="text-2xl font-bold text-slate-800">Imaginative Prayer</h2>
-                           <p className="text-sm font-semibold text-slate-500">{currentWeekData.scripture.reference}</p>
+                           <p className="text-sm font-semibold text-slate-500">{currentWeekData.scripture.version} {currentWeekData.scripture.reference}</p>
                         </div>
                          <button 
                             onClick={() => toggleSpeech(currentWeekData.scripture.text)}
@@ -726,7 +726,7 @@ const App: React.FC = () => {
                             prompt: 'Journal your thoughts, feelings, or prayers in response to this scripture.'
                         }}
                         journalText={journalEntry?.text || ''}
-                        onJournalChange={(text) => handleJournalChange(journalKey, text, `Scripture: ${currentWeekData.scripture.reference}`)}
+                        onJournalChange={(text) => handleJournalChange(journalKey, text, `Scripture: ${currentWeekData.scripture.version} ${currentWeekData.scripture.reference}`)}
                         journalTag={journalEntry?.tag || null}
                         onTagChange={(tag) => handleTagChange(journalKey, tag)}
                         focusPrompt={`This week's focus: ${currentWeekData.examenFocus}`}

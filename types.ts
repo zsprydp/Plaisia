@@ -23,6 +23,7 @@ export interface JournalEntries {
 
 export interface ScripturePassage {
     reference: string;
+    version: string;
     text: string;
 }
 
