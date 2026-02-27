@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { checkRateLimit } from '../_rateLimit.js';
+import { validateText, sanitizeText } from '../_validate.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -17,6 +18,12 @@ export default async function handler(req, res) {
     return res.json({ prompt: 'What is on your heart as you come to this time of prayer?' });
   }
 
+  const validationError = validateText(journalEntry, 'journalEntry');
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
+  }
+  const cleanEntry = sanitizeText(journalEntry);
+
   const ai = new GoogleGenAI({ apiKey });
 
   const systemInstruction = `You are a gentle spiritual guide in the Ignatian tradition. 
@@ -29,7 +36,7 @@ Keep the question under 20 words.`;
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `Here is the user's journal entry: "${journalEntry}". Please generate one reflection question.`,
+      contents: `Here is the user's journal entry: "${cleanEntry}". Please generate one reflection question.`,
       config: {
         systemInstruction,
         temperature: 0.7,

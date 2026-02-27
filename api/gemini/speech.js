@@ -17,6 +17,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Text is required.' });
   }
 
+  if (typeof text !== 'string' || text.length > 5000) {
+    return res.status(400).json({ error: 'Text exceeds maximum length.' });
+  }
+
   const ai = new GoogleGenAI({ apiKey });
 
   try {

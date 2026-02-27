@@ -1,6 +1,15 @@
 import { Router } from 'express';
 import { GoogleGenAI, Modality } from '@google/genai';
 
+const MAX_TEXT = 5000;
+const MAX_ENTRIES = 100;
+
+function validateString(val, name) {
+  if (typeof val !== 'string') return `${name} must be a string.`;
+  if (val.length > MAX_TEXT) return `${name} exceeds maximum length of ${MAX_TEXT} characters.`;
+  return null;
+}
+
 export function createGeminiRoutes(apiKey) {
   const router = Router();
 
@@ -20,6 +29,11 @@ export function createGeminiRoutes(apiKey) {
       return res.json({ prompt: 'What is on your heart as you come to this time of prayer?' });
     }
 
+    const err = validateString(journalEntry, 'journalEntry');
+    if (err) return res.status(400).json({ error: err });
+
+    const cleanEntry = journalEntry.slice(0, MAX_TEXT).trim();
+
     const systemInstruction = `You are a gentle spiritual guide in the Ignatian tradition. 
 Your role is to help a user reflect more deeply on their day.
 Based on the user's journal entry about a specific moment, ask one short, compassionate, and open-ended question to guide their conversation with Jesus.
@@ -32,7 +46,7 @@ Example: If user writes "My boss was so unfair today", a good question is "Where
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: `Here is the user's journal entry: "${journalEntry}". Please generate one reflection question.`,
+        contents: `Here is the user's journal entry: "${cleanEntry}". Please generate one reflection question.`,
         config: {
           systemInstruction,
           temperature: 0.7,
@@ -51,8 +65,15 @@ Example: If user writes "My boss was so unfair today", a good question is "Where
   router.post('/discernment', async (req, res) => {
     const { entries } = req.body;
 
-    const taggedEntries = Object.values(entries || {}).filter(
-      (entry) => entry.tag && entry.text.trim().length > 10
+    if (!entries || typeof entries !== 'object') {
+      return res.status(400).json({ error: 'entries must be an object.' });
+    }
+    if (Object.keys(entries).length > MAX_ENTRIES) {
+      return res.status(400).json({ error: `Too many entries (max ${MAX_ENTRIES}).` });
+    }
+
+    const taggedEntries = Object.values(entries).filter(
+      (entry) => entry.tag && entry.text?.trim().length > 10
     );
 
     if (taggedEntries.length < 3) {
@@ -71,7 +92,7 @@ Analyze the provided entries for:
 3. **The "Why":** Look for the underlying desires or fears expressed in the text.
 
 Output Requirements:
-- Identify **2-3 distinct, nuanced patterns**. Avoid generic statements like "You are happy sometimes." Be specific (e.g., "Desolation tends to arise when you feel a lack of control at work.").
+- Identify **2-3 distinct, nuanced patterns**. Avoid generic statements like "You are happy sometimes." Be specific.
 - Formulate **one deep, searching question** that invites the user to take a specific action or shift their perspective based on these patterns.
 - Use Markdown. Use **bold** for key concepts.
 - Keep the tone gentle, objective, but insightful. Total length under 150 words.`;
@@ -85,7 +106,9 @@ ${taggedEntries
       month: 'short',
       day: 'numeric',
     });
-    return `- [${dateStr}] [${e.tag?.toUpperCase()}] Title: "${e.title}"\n  Journal: "${e.text}"`;
+    const safeText = (e.text || '').slice(0, MAX_TEXT);
+    const safeTitle = (e.title || '').slice(0, 200);
+    return `- [${dateStr}] [${e.tag?.toUpperCase()}] Title: "${safeTitle}"\n  Journal: "${safeText}"`;
   })
   .join('\n\n')}
 
@@ -95,10 +118,7 @@ Please provide a discernment summary identifying specific patterns and a reflect
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
-        config: {
-          systemInstruction,
-          temperature: 0.5,
-        },
+        config: { systemInstruction, temperature: 0.5 },
       });
       res.json({ summary: response.text ?? '' });
     } catch (error) {
@@ -113,11 +133,14 @@ Please provide a discernment summary identifying specific patterns and a reflect
     if (!text) {
       return res.status(400).json({ error: 'Text is required.' });
     }
+    if (typeof text !== 'string' || text.length > MAX_TEXT) {
+      return res.status(400).json({ error: 'Text exceeds maximum length.' });
+    }
 
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-preview-tts',
-        contents: [{ parts: [{ text }] }],
+        contents: [{ parts: [{ text: text.slice(0, MAX_TEXT) }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {

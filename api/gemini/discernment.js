@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { checkRateLimit } from '../_rateLimit.js';
+import { validateEntries } from '../_validate.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -13,6 +14,11 @@ export default async function handler(req, res) {
   }
 
   const { entries } = req.body;
+
+  const validationError = validateEntries(entries);
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
+  }
 
   const taggedEntries = Object.values(entries || {}).filter(
     (entry) => entry.tag && entry.text.trim().length > 10
