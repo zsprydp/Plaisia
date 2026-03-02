@@ -16,8 +16,10 @@ import Icon from './components/Icon';
 import MoodTracker from './components/MoodTracker';
 import AuthModal from './components/AuthModal';
 import Onboarding from './components/Onboarding';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
 
-type UIMode = 'landing' | 'onboarding' | 'dashboard' | 'mood_check_in' | 'daily_practice' | 'discernment' | 'history';
+type UIMode = 'landing' | 'onboarding' | 'dashboard' | 'mood_check_in' | 'daily_practice' | 'discernment' | 'history' | 'privacy' | 'terms';
 
 const App: React.FC = () => {
   const [uiMode, setUiMode] = useState<UIMode>('landing');
@@ -400,11 +402,31 @@ const App: React.FC = () => {
                           {reminderTime && <p className="text-xs text-green-600 mt-2 font-medium">Reminders set for {reminderTime} daily.</p>}
                       </div>
 
+                      <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center">
+                              <Icon name="Conversation" className="w-4 h-4 mr-2 text-sky-600" />
+                              Give Feedback
+                          </label>
+                          <p className="text-xs text-slate-500 mb-3">Help us improve Plaísia with your thoughts.</p>
+                          <a
+                              href="https://forms.gle/placeholder"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block px-4 py-2 bg-sky-50 text-sky-700 rounded-lg text-sm font-semibold hover:bg-sky-100 transition-colors border border-sky-200"
+                          >
+                              Open Feedback Form
+                          </a>
+                      </div>
+
                       <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
                            <h4 className="text-sm font-bold text-slate-700 mb-2">About Privacy</h4>
                            <p className="text-xs text-slate-500 leading-relaxed">
                                Plaísia stores all your journal entries and settings locally on your device. We do not track you or store your personal prayers on any server.
                            </p>
+                           <div className="flex space-x-4 mt-3">
+                               <button onClick={() => { setShowSettings(false); handleSetMode('privacy'); }} className="text-xs text-sky-600 hover:text-sky-800 underline">Privacy Policy</button>
+                               <button onClick={() => { setShowSettings(false); handleSetMode('terms'); }} className="text-xs text-sky-600 hover:text-sky-800 underline">Terms of Service</button>
+                           </div>
                       </div>
                   </div>
                   
@@ -491,6 +513,10 @@ const App: React.FC = () => {
               <div className="mt-8 flex flex-col items-center space-y-2">
                   <p className="text-xs text-slate-500">Your journal data is stored locally on your device for privacy.</p>
                   <p className="text-xs text-slate-600">Works offline · No account required · Free</p>
+                  <div className="flex space-x-4 mt-2">
+                      <button onClick={() => handleSetMode('privacy')} className="text-xs text-slate-500 hover:text-slate-300 underline transition-colors">Privacy Policy</button>
+                      <button onClick={() => handleSetMode('terms')} className="text-xs text-slate-500 hover:text-slate-300 underline transition-colors">Terms of Service</button>
+                  </div>
               </div>
           </div>
       </div>
@@ -855,6 +881,8 @@ const App: React.FC = () => {
           case 'daily_practice': return renderDailyPractice();
           case 'discernment': return renderDiscernmentTool();
           case 'history': return renderHistory();
+          case 'privacy': return <PrivacyPolicy onBack={() => handleSetMode('landing')} />;
+          case 'terms': return <TermsOfService onBack={() => handleSetMode('landing')} />;
           case 'dashboard':
           default:
               return renderDashboard();
