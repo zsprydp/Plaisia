@@ -409,7 +409,7 @@ const App: React.FC = () => {
                           </label>
                           <p className="text-xs text-slate-500 mb-3">Help us improve Plaísia with your thoughts.</p>
                           <a
-                              href="https://forms.gle/placeholder"
+                              href="https://docs.google.com/forms/d/e/1FAIpQLSeBHVizykvIEnq8q_j0Y_iHa-mLKQFxn-9hnQeah29pmV2fFw/viewform"
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-block px-4 py-2 bg-sky-50 text-sky-700 rounded-lg text-sm font-semibold hover:bg-sky-100 transition-colors border border-sky-200"
